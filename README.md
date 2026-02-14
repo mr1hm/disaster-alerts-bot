@@ -92,12 +92,15 @@ The bot connects to the disaster alerts gRPC server and streams new disasters in
 ## Message Format
 
 ```
-**TITLE:** M 6.5 - Near Tokyo, Japan
-**LOCATION:** 35.6762° N, 139.6503° E
-**MAGNITUDE:** 6.5
-**ALERT:** 🟠 Moderate impact, may need international attention
-**TIME:** January 15, 2026 2:30 PM (localized to user's timezone)
-**SOURCE:** USGS
+🔴 **EARTHQUAKE** - Indonesia
+**TITLE:** Red earthquake (Magnitude 7.2M, Depth:10km)
+**AFFECTED:** 50,000 people in affected area
+**LOCATION:** 4.2200° N, 128.2600° E
+**MAGNITUDE:** 7.2
+**ALERT:** 🔴 Severe impact, likely needs international humanitarian aid
+**TIME:** February 14, 2026 2:30 PM (localized to user's timezone)
+**SOURCE:** GDACS
+https://www.gdacs.org/report.aspx?eventtype=EQ&eventid=1524431
 ```
 
 Alert level indicators:
