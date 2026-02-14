@@ -2,31 +2,38 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/mr1hm/disaster-alerts-bot/internal/bot"
 	"github.com/mr1hm/disaster-alerts-bot/internal/config"
 )
 
 func main() {
+	_ = godotenv.Load() // ignore error if .env doesn't exist
+
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		slog.Error("Failed to load config", "error", err)
+		os.Exit(1)
 	}
 
 	if cfg.Token == "" {
-		log.Fatal("DISCORD_TOKEN is required")
+		slog.Error("DISCORD_TOKEN is required")
+		os.Exit(1)
 	}
 	if cfg.ChannelID == "" {
-		log.Fatal("DISCORD_CHANNEL_ID is required")
+		slog.Error("DISCORD_CHANNEL_ID is required")
+		os.Exit(1)
 	}
 
 	b, err := bot.New(cfg)
 	if err != nil {
-		log.Fatalf("Failed to create bot: %v", err)
+		slog.Error("Failed to create bot", "error", err)
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -36,14 +43,15 @@ func main() {
 
 	go func() {
 		<-sigCh
-		log.Println("Shutting down...")
+		slog.Info("Shutting down...")
 		cancel()
 	}()
 
 	if err := b.Start(ctx); err != nil {
-		log.Fatalf("Bot error: %v", err)
+		slog.Error("Bot error", "error", err)
+		os.Exit(1)
 	}
 
 	b.Stop()
-	log.Println("Bot stopped")
+	slog.Info("Bot stopped")
 }

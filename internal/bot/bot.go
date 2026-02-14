@@ -3,7 +3,7 @@ package bot
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -49,7 +49,7 @@ func (b *Bot) Start(ctx context.Context) error {
 		return fmt.Errorf("opening discord connection: %w", err)
 	}
 
-	log.Printf("Bot started, streaming from %s", b.config.GRPCAddress)
+	slog.Info("Bot started", "grpc_address", b.config.GRPCAddress)
 
 	for {
 		select {
@@ -57,7 +57,7 @@ func (b *Bot) Start(ctx context.Context) error {
 			return nil
 		default:
 			if err := b.streamDisasters(ctx); err != nil {
-				log.Printf("Stream error: %v, reconnecting in 5s...", err)
+				slog.Error("Stream error, reconnecting in 5s", "error", err)
 				time.Sleep(5 * time.Second)
 			}
 		}
@@ -69,6 +69,8 @@ func (b *Bot) streamDisasters(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("starting stream: %w", err)
 	}
+
+	slog.Info("Connected to disaster stream")
 
 	for {
 		disaster, err := stream.Recv()
@@ -85,12 +87,12 @@ func (b *Bot) streamDisasters(ctx context.Context) error {
 		}
 
 		if err := b.postDisaster(disaster); err != nil {
-			log.Printf("Failed to post disaster %s: %v", disaster.Id, err)
+			slog.Error("Failed to post disaster", "id", disaster.Id, "error", err)
 			continue
 		}
 
 		b.markPosted(disaster.Id)
-		log.Printf("Posted disaster: %s - %s (mag: %.1f)", disaster.Id, disaster.Title, disaster.Magnitude)
+		slog.Info("Posted disaster", "id", disaster.Id, "title", disaster.Title, "magnitude", disaster.Magnitude)
 	}
 }
 
