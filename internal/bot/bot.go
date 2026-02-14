@@ -65,19 +65,7 @@ func (b *Bot) Start(ctx context.Context) error {
 }
 
 func (b *Bot) streamDisasters(ctx context.Context) error {
-	req := &disastersv1.StreamDisastersRequest{}
-
-	if b.config.MinMagnitude != nil {
-		req.MinMagnitude = b.config.MinMagnitude
-	}
-	if b.config.DisasterType != disastersv1.DisasterType_UNSPECIFIED {
-		req.Type = &b.config.DisasterType
-	}
-	if b.config.AlertLevel != disastersv1.AlertLevel_UNKNOWN {
-		req.AlertLevel = disastersv1.AlertLevel_UNKNOWN.Enum()
-	}
-
-	stream, err := b.client.StreamDisasters(ctx, req)
+	stream, err := b.client.StreamDisasters(ctx, &disastersv1.StreamDisastersRequest{})
 	if err != nil {
 		return fmt.Errorf("starting stream: %w", err)
 	}
@@ -86,6 +74,10 @@ func (b *Bot) streamDisasters(ctx context.Context) error {
 		disaster, err := stream.Recv()
 		if err != nil {
 			return fmt.Errorf("receiving: %w", err)
+		}
+
+		if !b.shouldPost(disaster) {
+			continue
 		}
 
 		if b.isPosted(disaster.Id) {
@@ -100,6 +92,13 @@ func (b *Bot) streamDisasters(ctx context.Context) error {
 		b.markPosted(disaster.Id)
 		log.Printf("Posted disaster: %s - %s (mag: %.1f)", disaster.Id, disaster.Title, disaster.Magnitude)
 	}
+}
+
+func (b *Bot) shouldPost(d *disastersv1.Disaster) bool {
+	if d.Type == disastersv1.DisasterType_EARTHQUAKE {
+		return d.Magnitude >= b.config.MinMagnitude
+	}
+	return d.AlertLevel >= b.config.AlertLevel
 }
 
 func (b *Bot) Stop() {

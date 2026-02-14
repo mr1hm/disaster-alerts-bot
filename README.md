@@ -6,8 +6,8 @@ A Discord bot that streams real-time disaster alerts from the [go-disaster-alert
 
 - Real-time streaming via gRPC (no polling)
 - Automatic reconnection on stream failures
+- Configurable thresholds (magnitude, alert level)
 - Deduplication of posted alerts
-- Configurable filters (disaster type, alert level, magnitude)
 - Graceful shutdown on SIGINT/SIGTERM
 
 ### Coming Soon
@@ -47,17 +47,16 @@ A Discord bot that streams real-time disaster alerts from the [go-disaster-alert
 | `DISCORD_TOKEN` | Yes | - | Discord bot token |
 | `DISCORD_CHANNEL_ID` | Yes | - | Channel ID to post alerts |
 | `GRPC_ADDRESS` | No | `localhost:50051` | gRPC server address |
-| `MIN_MAGNITUDE` | No | - | Minimum magnitude filter |
-| `DISASTER_TYPE` | No | - | Filter by type (e.g., `EARTHQUAKE`) |
-| `ALERT_LEVEL` | No | - | Filter by level (e.g., `RED`) |
+| `MIN_MAGNITUDE` | No | `5.0` | Minimum magnitude for earthquakes |
+| `ALERT_LEVEL` | No | `ORANGE` | Minimum alert level for other disasters |
 
-### Disaster Types
+### Filtering
 
-`EARTHQUAKE`, `FLOOD`, `CYCLONE`, `TSUNAMI`, `VOLCANO`, `WILDFIRE`, `DROUGHT`
+The bot filters disasters before posting:
+- **Earthquakes**: posted if `magnitude >= MIN_MAGNITUDE`
+- **Other disasters**: posted if `alert_level >= ALERT_LEVEL`
 
-### Alert Levels
-
-`GREEN`, `ORANGE`, `RED`
+Alert levels: `GREEN` < `ORANGE` < `RED`
 
 ## Running
 

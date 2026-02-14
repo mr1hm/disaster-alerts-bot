@@ -237,6 +237,87 @@ func TestFormatDisasterMessage(t *testing.T) {
 	}
 }
 
+func TestBot_ShouldPost(t *testing.T) {
+	b := &Bot{
+		config: &config.Config{
+			MinMagnitude: 5.0,
+			AlertLevel:   disastersv1.AlertLevel_ORANGE,
+		},
+	}
+
+	tests := []struct {
+		name     string
+		disaster *disastersv1.Disaster
+		want     bool
+	}{
+		{
+			name: "earthquake above threshold",
+			disaster: &disastersv1.Disaster{
+				Type:      disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude: 6.0,
+			},
+			want: true,
+		},
+		{
+			name: "earthquake below threshold",
+			disaster: &disastersv1.Disaster{
+				Type:      disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude: 4.5,
+			},
+			want: false,
+		},
+		{
+			name: "earthquake at threshold",
+			disaster: &disastersv1.Disaster{
+				Type:      disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude: 5.0,
+			},
+			want: true,
+		},
+		{
+			name: "flood with orange alert",
+			disaster: &disastersv1.Disaster{
+				Type:       disastersv1.DisasterType_FLOOD,
+				AlertLevel: disastersv1.AlertLevel_ORANGE,
+			},
+			want: true,
+		},
+		{
+			name: "flood with red alert",
+			disaster: &disastersv1.Disaster{
+				Type:       disastersv1.DisasterType_FLOOD,
+				AlertLevel: disastersv1.AlertLevel_RED,
+			},
+			want: true,
+		},
+		{
+			name: "flood with green alert",
+			disaster: &disastersv1.Disaster{
+				Type:       disastersv1.DisasterType_FLOOD,
+				AlertLevel: disastersv1.AlertLevel_GREEN,
+			},
+			want: false,
+		},
+		{
+			name: "cyclone with unknown alert",
+			disaster: &disastersv1.Disaster{
+				Type:       disastersv1.DisasterType_CYCLONE,
+				AlertLevel: disastersv1.AlertLevel_UNKNOWN,
+			},
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := b.shouldPost(tt.disaster)
+			if got != tt.want {
+				t.Errorf("shouldPost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGetTypeEmoji(t *testing.T) {
 	tests := []struct {
 		dtype disastersv1.DisasterType

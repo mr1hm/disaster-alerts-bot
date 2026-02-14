@@ -11,27 +11,22 @@ type Config struct {
 	Token        string
 	ChannelID    string
 	GRPCAddress  string
-	MinMagnitude *float64
-	DisasterType disastersv1.DisasterType
+	MinMagnitude float64
 	AlertLevel   disastersv1.AlertLevel
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		Token:       os.Getenv("DISCORD_TOKEN"),
-		ChannelID:   os.Getenv("DISCORD_CHANNEL_ID"),
-		GRPCAddress: getEnvOrDefault("GRPC_ADDRESS", "localhost:50051"),
+		Token:        os.Getenv("DISCORD_TOKEN"),
+		ChannelID:    os.Getenv("DISCORD_CHANNEL_ID"),
+		GRPCAddress:  getEnvOrDefault("GRPC_ADDRESS", "localhost:50051"),
+		MinMagnitude: 5.0,
+		AlertLevel:   disastersv1.AlertLevel_ORANGE,
 	}
 
 	if minMag := os.Getenv("MIN_MAGNITUDE"); minMag != "" {
 		if mag, err := strconv.ParseFloat(minMag, 64); err == nil {
-			cfg.MinMagnitude = &mag
-		}
-	}
-
-	if dt := os.Getenv("DISASTER_TYPE"); dt != "" {
-		if val, ok := disastersv1.DisasterType_value[dt]; ok {
-			cfg.DisasterType = disastersv1.DisasterType(val)
+			cfg.MinMagnitude = mag
 		}
 	}
 
