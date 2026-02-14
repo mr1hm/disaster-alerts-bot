@@ -215,28 +215,33 @@ func TestFormatDisasterMessage(t *testing.T) {
 		AlertLevel: disastersv1.AlertLevel_ORANGE,
 		Source:     "USGS",
 		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
+		Country:    "Japan",
+		Population: "1.2 million in affected area",
+		ReportUrl:  "https://example.com/report/123",
 	}
 
 	msg := formatDisasterMessage(disaster)
 
-	// Check key parts are present
-	if !contains(msg, "M 6.5 - Near Tokyo, Japan") {
-		t.Error("message missing title")
+	checks := []struct {
+		name  string
+		value string
+	}{
+		{"header with emoji and type", "🟠 **EARTHQUAKE**"},
+		{"country in header", "- Japan"},
+		{"title", "M 6.5 - Near Tokyo, Japan"},
+		{"population", "1.2 million in affected area"},
+		{"latitude", "35.6762"},
+		{"magnitude", "6.5"},
+		{"source", "USGS"},
+		{"alert emoji", "🟠"},
+		{"Discord timestamp", "<t:"},
+		{"report URL", "https://example.com/report/123"},
 	}
-	if !contains(msg, "35.6762") {
-		t.Error("message missing latitude")
-	}
-	if !contains(msg, "6.5") {
-		t.Error("message missing magnitude")
-	}
-	if !contains(msg, "USGS") {
-		t.Error("message missing source")
-	}
-	if !contains(msg, "🟠") {
-		t.Error("message missing orange alert emoji")
-	}
-	if !contains(msg, "<t:") {
-		t.Error("message missing Discord timestamp")
+
+	for _, check := range checks {
+		if !contains(msg, check.value) {
+			t.Errorf("message missing %s: %q", check.name, check.value)
+		}
 	}
 }
 

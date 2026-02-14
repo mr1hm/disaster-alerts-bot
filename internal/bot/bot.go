@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -152,27 +153,54 @@ func (b *Bot) markPosted(id string) {
 }
 
 func formatDisasterMessage(d *disastersv1.Disaster) string {
-	msg := fmt.Sprintf(`**TITLE:** %s
-**LOCATION:** %.4f° N, %.4f° E
-**MAGNITUDE:** %.1f`,
-		d.Title,
-		d.Latitude,
-		d.Longitude,
-		d.Magnitude,
+	// Header: 🔴 **EARTHQUAKE** - Indonesia
+	alertEmoji := getAlertEmoji(d.AlertLevel)
+	header := fmt.Sprintf("%s **%s**", alertEmoji, d.Type.String())
+	if d.Country != "" {
+		header += " - " + d.Country
+	}
+
+	lines := []string{
+		header,
+		fmt.Sprintf("**TITLE:** %s", d.Title),
+	}
+
+	if d.Population != "" {
+		lines = append(lines, fmt.Sprintf("**AFFECTED:** %s", d.Population))
+	}
+
+	lines = append(lines,
+		fmt.Sprintf("**LOCATION:** %.4f° N, %.4f° E", d.Latitude, d.Longitude),
+		fmt.Sprintf("**MAGNITUDE:** %.1f", d.Magnitude),
 	)
 
 	if d.AlertLevel != disastersv1.AlertLevel_UNKNOWN {
-		msg += fmt.Sprintf("\n**ALERT:** %s", formatAlertLevel(d.AlertLevel))
+		lines = append(lines, fmt.Sprintf("**ALERT:** %s", formatAlertLevel(d.AlertLevel)))
 	}
 
-	msg += fmt.Sprintf(`
-**TIME:** <t:%d:F>
-**SOURCE:** %s`,
-		d.Timestamp,
-		d.Source,
+	lines = append(lines,
+		fmt.Sprintf("**TIME:** <t:%d:F>", d.Timestamp),
+		fmt.Sprintf("**SOURCE:** %s", d.Source),
 	)
 
-	return msg
+	if d.ReportUrl != "" {
+		lines = append(lines, d.ReportUrl)
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func getAlertEmoji(level disastersv1.AlertLevel) string {
+	switch level {
+	case disastersv1.AlertLevel_GREEN:
+		return "🟢"
+	case disastersv1.AlertLevel_ORANGE:
+		return "🟠"
+	case disastersv1.AlertLevel_RED:
+		return "🔴"
+	default:
+		return "⚪"
+	}
 }
 
 func formatAlertLevel(level disastersv1.AlertLevel) string {
