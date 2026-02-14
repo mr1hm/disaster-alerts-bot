@@ -7,6 +7,8 @@ services:
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - DISCORD_CHANNEL_ID=${DISCORD_CHANNEL_ID}
       - GRPC_ADDRESS=disaster-alerts:50051
+      - MIN_MAGNITUDE=5.0
+      - ALERT_LEVEL=ORANGE
     networks:
       - disaster-alerts-net
 
