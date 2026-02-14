@@ -232,8 +232,11 @@ func TestFormatDisasterMessage(t *testing.T) {
 	if !contains(msg, "USGS") {
 		t.Error("message missing source")
 	}
-	if !contains(msg, "🌍") {
-		t.Error("message missing earthquake emoji")
+	if !contains(msg, "🟠") {
+		t.Error("message missing orange alert emoji")
+	}
+	if !contains(msg, "<t:") {
+		t.Error("message missing Discord timestamp")
 	}
 }
 
@@ -318,23 +321,20 @@ func TestBot_ShouldPost(t *testing.T) {
 	}
 }
 
-func TestGetTypeEmoji(t *testing.T) {
+func TestFormatAlertLevel(t *testing.T) {
 	tests := []struct {
-		dtype disastersv1.DisasterType
+		level disastersv1.AlertLevel
 		want  string
 	}{
-		{disastersv1.DisasterType_EARTHQUAKE, "🌍"},
-		{disastersv1.DisasterType_FLOOD, "🌊"},
-		{disastersv1.DisasterType_WILDFIRE, "🔥"},
-		{disastersv1.DisasterType_CYCLONE, "🌀"},
-		{disastersv1.DisasterType_VOLCANO, "🌋"},
-		{disastersv1.DisasterType_UNSPECIFIED, "⚠️"},
+		{disastersv1.AlertLevel_GREEN, "🟢 Minor impact, localized"},
+		{disastersv1.AlertLevel_ORANGE, "🟠 Moderate impact, may need international attention"},
+		{disastersv1.AlertLevel_RED, "🔴 Severe impact, likely needs international humanitarian aid"},
 	}
 
 	for _, tt := range tests {
-		got := getTypeEmoji(tt.dtype)
+		got := formatAlertLevel(tt.level)
 		if got != tt.want {
-			t.Errorf("getTypeEmoji(%v) = %q, want %q", tt.dtype, got, tt.want)
+			t.Errorf("formatAlertLevel(%v) = %q, want %q", tt.level, got, tt.want)
 		}
 	}
 }

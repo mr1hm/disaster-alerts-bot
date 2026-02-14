@@ -44,6 +44,8 @@ func New(cfg *config.Config) (*Bot, error) {
 	}, nil
 }
 
+const maxRetries = 5
+
 func (b *Bot) Start(ctx context.Context) error {
 	if err := b.session.Open(); err != nil {
 		return fmt.Errorf("opening discord connection: %w", err)
@@ -51,23 +53,35 @@ func (b *Bot) Start(ctx context.Context) error {
 
 	slog.Info("Bot started", "grpc_address", b.config.GRPCAddress)
 
+	retries := 0
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
-			if err := b.streamDisasters(ctx); err != nil {
-				slog.Error("Stream error, reconnecting in 5s", "error", err)
+			connected, err := b.streamDisasters(ctx)
+			if err != nil {
+				if connected {
+					// Stream was working, reset retry count
+					retries = 0
+					slog.Info("Stream disconnected, reconnecting", "error", err)
+				} else {
+					retries++
+					if retries >= maxRetries {
+						return fmt.Errorf("stream failed after %d retries: %w", maxRetries, err)
+					}
+					slog.Error("Stream error, reconnecting", "error", err, "retry", retries, "max_retries", maxRetries)
+				}
 				time.Sleep(5 * time.Second)
 			}
 		}
 	}
 }
 
-func (b *Bot) streamDisasters(ctx context.Context) error {
+func (b *Bot) streamDisasters(ctx context.Context) (connected bool, err error) {
 	stream, err := b.client.StreamDisasters(ctx, &disastersv1.StreamDisastersRequest{})
 	if err != nil {
-		return fmt.Errorf("starting stream: %w", err)
+		return false, fmt.Errorf("starting stream: %w", err)
 	}
 
 	slog.Info("Connected to disaster stream")
@@ -75,8 +89,10 @@ func (b *Bot) streamDisasters(ctx context.Context) error {
 	for {
 		disaster, err := stream.Recv()
 		if err != nil {
-			return fmt.Errorf("receiving: %w", err)
+			return connected, fmt.Errorf("receiving: %w", err)
 		}
+
+		connected = true // Successfully received at least one message
 
 		if !b.shouldPost(disaster) {
 			continue
@@ -131,13 +147,9 @@ func (b *Bot) markPosted(id string) {
 }
 
 func formatDisasterMessage(d *disastersv1.Disaster) string {
-	emoji := getTypeEmoji(d.Type)
-	ts := time.Unix(d.Timestamp, 0).UTC()
-
-	msg := fmt.Sprintf(`%s **%s**
-📍 Location: %.4f° N, %.4f° E
-📊 Magnitude: %.1f`,
-		emoji,
+	msg := fmt.Sprintf(`**TITLE:** %s
+**LOCATION:** %.4f° N, %.4f° E
+**MAGNITUDE:** %.1f`,
 		d.Title,
 		d.Latitude,
 		d.Longitude,
@@ -145,36 +157,29 @@ func formatDisasterMessage(d *disastersv1.Disaster) string {
 	)
 
 	if d.AlertLevel != disastersv1.AlertLevel_UNKNOWN {
-		msg += fmt.Sprintf("\n🚨 Alert: %s", d.AlertLevel.String())
+		msg += fmt.Sprintf("\n**ALERT:** %s", formatAlertLevel(d.AlertLevel))
 	}
 
 	msg += fmt.Sprintf(`
-🕐 Time: %s
-🔗 Source: %s`,
-		ts.Format("2006-01-02 15:04 UTC"),
+**TIME:** <t:%d:F>
+**SOURCE:** %s`,
+		d.Timestamp,
 		d.Source,
 	)
 
 	return msg
 }
 
-func getTypeEmoji(t disastersv1.DisasterType) string {
-	switch t {
-	case disastersv1.DisasterType_EARTHQUAKE:
-		return "🌍"
-	case disastersv1.DisasterType_FLOOD:
-		return "🌊"
-	case disastersv1.DisasterType_WILDFIRE:
-		return "🔥"
-	case disastersv1.DisasterType_CYCLONE:
-		return "🌀"
-	case disastersv1.DisasterType_TSUNAMI:
-		return "🌊"
-	case disastersv1.DisasterType_VOLCANO:
-		return "🌋"
-	case disastersv1.DisasterType_DROUGHT:
-		return "☀️"
+func formatAlertLevel(level disastersv1.AlertLevel) string {
+	switch level {
+	case disastersv1.AlertLevel_GREEN:
+		return "🟢 Minor impact, localized"
+	case disastersv1.AlertLevel_ORANGE:
+		return "🟠 Moderate impact, may need international attention"
+	case disastersv1.AlertLevel_RED:
+		return "🔴 Severe impact, likely needs international humanitarian aid"
 	default:
-		return "⚠️"
+		return level.String()
 	}
 }
+

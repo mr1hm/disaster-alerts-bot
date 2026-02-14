@@ -92,13 +92,18 @@ The bot connects to the disaster alerts gRPC server and streams new disasters in
 ## Message Format
 
 ```
-🌍 **M 6.5 - Near Tokyo, Japan**
-📍 Location: 35.6762° N, 139.6503° E
-📊 Magnitude: 6.5
-🚨 Alert: ORANGE
-🕐 Time: 2026-01-15 14:30 UTC
-🔗 Source: USGS
+**TITLE:** M 6.5 - Near Tokyo, Japan
+**LOCATION:** 35.6762° N, 139.6503° E
+**MAGNITUDE:** 6.5
+**ALERT:** 🟠 Moderate impact, may need international attention
+**TIME:** January 15, 2026 2:30 PM (localized to user's timezone)
+**SOURCE:** USGS
 ```
+
+Alert level indicators:
+- 🟢 Minor impact, localized
+- 🟠 Moderate impact, may need international attention
+- 🔴 Severe impact, likely needs international humanitarian aid
 
 ## License
 
