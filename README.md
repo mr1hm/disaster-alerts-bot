@@ -1,5 +1,7 @@
 # Disaster Alerts Bot
 
+[![CI](https://github.com/mr1hm/disaster-alerts-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/mr1hm/disaster-alerts-bot/actions/workflows/ci.yml)
+
 A Discord bot that streams real-time disaster alerts from the [go-disaster-alerts](https://github.com/mr1hm/go-disaster-alerts) gRPC API and posts them to a Discord channel.
 
 ## Features
