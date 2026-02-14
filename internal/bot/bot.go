@@ -61,6 +61,11 @@ func (b *Bot) Start(ctx context.Context) error {
 		default:
 			connected, err := b.streamDisasters(ctx)
 			if err != nil {
+				// Check if we're shutting down
+				if ctx.Err() != nil {
+					return nil
+				}
+
 				if connected {
 					// Stream was working, reset retry count
 					retries = 0
