@@ -54,6 +54,12 @@ func (b *Bot) Start(ctx context.Context) error {
 
 	slog.Info("Bot started", "grpc_address", b.config.GRPCAddress)
 
+	// Fetch and post existing disasters on startup
+	if err := b.fetchInitialDisasters(ctx); err != nil {
+		slog.Error("Failed to fetch initial disasters", "error", err)
+		// Continue anyway - streaming will still work
+	}
+
 	retries := 0
 	for {
 		select {
@@ -132,6 +138,30 @@ func (b *Bot) Stop() {
 	if b.conn != nil {
 		b.conn.Close()
 	}
+}
+
+func (b *Bot) fetchInitialDisasters(ctx context.Context) error {
+	alertLevel := b.config.AlertLevel
+	resp, err := b.client.ListDisasters(ctx, &disastersv1.ListDisastersRequest{
+		Limit:      50,
+		AlertLevel: &alertLevel,
+	})
+	if err != nil {
+		return fmt.Errorf("listing disasters: %w", err)
+	}
+
+	slog.Info("Fetched initial disasters", "count", len(resp.Disasters), "min_alert", alertLevel.String())
+
+	for _, disaster := range resp.Disasters {
+		if err := b.postDisaster(disaster); err != nil {
+			slog.Error("Failed to post initial disaster", "id", disaster.Id, "error", err)
+			continue
+		}
+		b.markPosted(disaster.Id)
+	}
+
+	slog.Info("Posted initial disasters", "count", len(resp.Disasters))
+	return nil
 }
 
 func (b *Bot) postDisaster(d *disastersv1.Disaster) error {
