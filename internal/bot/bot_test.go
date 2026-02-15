@@ -227,7 +227,6 @@ func TestFormatDisasterMessage(t *testing.T) {
 		value string
 	}{
 		{"header with emoji and type", "🟠 **EARTHQUAKE**"},
-		{"country in header", "- Japan"},
 		{"title", "M 6.5 - Near Tokyo, Japan"},
 		{"population", "1.2 million in affected area"},
 		{"latitude", "35.6762"},

@@ -183,12 +183,9 @@ func (b *Bot) markPosted(id string) {
 }
 
 func formatDisasterMessage(d *disastersv1.Disaster) string {
-	// Header: 🔴 **EARTHQUAKE** - Indonesia
+	// Header: 🔴 **EARTHQUAKE**
 	alertEmoji := getAlertEmoji(d.AlertLevel)
 	header := fmt.Sprintf("%s **%s**", alertEmoji, d.Type.String())
-	if d.Country != "" {
-		header += " - " + d.Country
-	}
 
 	lines := []string{
 		header,
