@@ -6,7 +6,7 @@ require (
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/ewohltman/discordgo-mock v0.0.11
 	github.com/joho/godotenv v1.5.1
-	github.com/mr1hm/go-disaster-alerts v0.0.0-20260214223319-26b58e226d6d
+	github.com/mr1hm/go-disaster-alerts v0.0.0-20260215040946-855baccd62c9
 	go.uber.org/goleak v1.3.0
 	google.golang.org/grpc v1.79.1
 )

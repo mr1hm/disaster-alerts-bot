@@ -143,8 +143,8 @@ func (b *Bot) Stop() {
 func (b *Bot) fetchInitialDisasters(ctx context.Context) error {
 	alertLevel := b.config.AlertLevel
 	resp, err := b.client.ListDisasters(ctx, &disastersv1.ListDisastersRequest{
-		Limit:      50,
-		AlertLevel: &alertLevel,
+		Limit:         50,
+		MinAlertLevel: &alertLevel,
 	})
 	if err != nil {
 		return fmt.Errorf("listing disasters: %w", err)
