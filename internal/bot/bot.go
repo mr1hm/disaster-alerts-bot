@@ -198,8 +198,11 @@ func formatDisasterMessage(d *disastersv1.Disaster) string {
 
 	lines = append(lines,
 		fmt.Sprintf("**LOCATION:** %.4f° N, %.4f° E", d.Latitude, d.Longitude),
-		fmt.Sprintf("**MAGNITUDE:** %.1f", d.Magnitude),
 	)
+
+	if d.Type == disastersv1.DisasterType_EARTHQUAKE {
+		lines = append(lines, fmt.Sprintf("**MAGNITUDE:** %.1f", d.Magnitude))
+	}
 
 	if d.AlertLevel != disastersv1.AlertLevel_UNKNOWN {
 		lines = append(lines, fmt.Sprintf("**ALERT:** %s", formatAlertLevel(d.AlertLevel)))
