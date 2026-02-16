@@ -7,9 +7,10 @@ A Discord bot that streams real-time disaster alerts from the [go-disaster-alert
 ## Features
 
 - Real-time streaming via gRPC (no polling)
-- Automatic reconnection on stream failures
+- Automatic reconnection on stream failures (max 5 retries)
 - Configurable thresholds (magnitude, alert level)
-- Deduplication of posted alerts
+- Deduplication via API acknowledgement (persists across restarts)
+- Fetches unsent disasters on startup (catches up on missed alerts)
 - Graceful shutdown on SIGINT/SIGTERM
 
 ### Coming Soon
@@ -87,13 +88,18 @@ internal/
 └── bot/bot.go           # Discord bot, gRPC streaming
 ```
 
-The bot connects to the disaster alerts gRPC server and streams new disasters in real-time. When a disaster is received, it formats a message and posts it to the configured Discord channel.
+The bot connects to the disaster alerts gRPC server and:
+
+1. **On startup**: Fetches any unsent disasters (`discord_sent=false`) and posts them
+2. **Streams**: Receives new disasters in real-time
+3. **Posts**: Formats and sends alerts to the configured Discord channel
+4. **Acknowledges**: Sends gRPC acknowledgement to mark disasters as sent (prevents duplicates on restart)
 
 ## Message Format
 
 ```
-🔴 **EARTHQUAKE** - Indonesia
-**TITLE:** Red earthquake (Magnitude 7.2M, Depth:10km)
+🔴 **EARTHQUAKE**
+**TITLE:** Red earthquake alert in Indonesia (Magnitude 7.2M, Depth:10km)
 **AFFECTED:** 50,000 people in affected area
 **LOCATION:** 4.2200° N, 128.2600° E
 **MAGNITUDE:** 7.2
@@ -102,6 +108,8 @@ The bot connects to the disaster alerts gRPC server and streams new disasters in
 **SOURCE:** GDACS
 https://www.gdacs.org/report.aspx?eventtype=EQ&eventid=1524431
 ```
+
+Note: Magnitude is only shown for earthquakes.
 
 Alert level indicators:
 - 🟢 Minor impact, localized
