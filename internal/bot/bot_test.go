@@ -76,7 +76,7 @@ func TestBot_PostDisaster(t *testing.T) {
 		Latitude:   35.6762,
 		Longitude:  139.6503,
 		AlertLevel: disastersv1.AlertLevel_ORANGE,
-		Source:     "USGS",
+		Source:     "GDACS",
 		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
 	}
 
@@ -213,7 +213,7 @@ func TestFormatDisasterMessage(t *testing.T) {
 		Latitude:   35.6762,
 		Longitude:  139.6503,
 		AlertLevel: disastersv1.AlertLevel_ORANGE,
-		Source:     "USGS",
+		Source:     "GDACS",
 		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
 		Country:    "Japan",
 		Population: "1.2 million in affected area",
@@ -231,7 +231,7 @@ func TestFormatDisasterMessage(t *testing.T) {
 		{"population", "1.2 million in affected area"},
 		{"latitude", "35.6762"},
 		{"magnitude", "6.5"},
-		{"source", "USGS"},
+		{"source", "GDACS"},
 		{"alert emoji", "🟠"},
 		{"Discord timestamp", "<t:"},
 		{"report URL", "https://example.com/report/123"},
