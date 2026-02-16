@@ -4,6 +4,7 @@ services:
     container_name: disaster-alerts-bot
     restart: unless-stopped
     environment:
+      - TZ=America/Los_Angeles
       - DISCORD_TOKEN=${DISCORD_TOKEN}
       - DISCORD_CHANNEL_ID=${DISCORD_CHANNEL_ID}
       - GRPC_ADDRESS=disaster-alerts:50051
