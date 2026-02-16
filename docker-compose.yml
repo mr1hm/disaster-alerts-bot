@@ -9,6 +9,11 @@ services:
       - GRPC_ADDRESS=disaster-alerts:50051
       - MIN_MAGNITUDE=5.0
       - ALERT_LEVEL=ORANGE
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - disaster-alerts-net
 
