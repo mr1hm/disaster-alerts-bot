@@ -119,8 +119,9 @@ func (b *Bot) streamDisasters(ctx context.Context) (connected bool, err error) {
 			continue
 		}
 
+		b.acknowledgeDisaster(ctx, disaster.Id)
 		b.markPosted(disaster.Id)
-		slog.Info("Posted disaster", "id", disaster.Id, "title", disaster.Title, "magnitude", disaster.Magnitude)
+		slog.Info("Posted disaster", "id", disaster.Id, "title", disaster.Title)
 	}
 }
 
@@ -142,26 +143,40 @@ func (b *Bot) Stop() {
 
 func (b *Bot) fetchInitialDisasters(ctx context.Context) error {
 	alertLevel := b.config.AlertLevel
+	discordSent := false
 	resp, err := b.client.ListDisasters(ctx, &disastersv1.ListDisastersRequest{
 		Limit:         50,
 		MinAlertLevel: &alertLevel,
+		DiscordSent:   &discordSent,
 	})
 	if err != nil {
 		return fmt.Errorf("listing disasters: %w", err)
 	}
 
-	slog.Info("Fetched initial disasters", "count", len(resp.Disasters), "min_alert", alertLevel.String())
+	slog.Info("Fetched unsent disasters", "count", len(resp.Disasters), "min_alert", alertLevel.String())
 
+	posted := 0
 	for _, disaster := range resp.Disasters {
 		if err := b.postDisaster(disaster); err != nil {
 			slog.Error("Failed to post initial disaster", "id", disaster.Id, "error", err)
 			continue
 		}
+		b.acknowledgeDisaster(ctx, disaster.Id)
 		b.markPosted(disaster.Id)
+		posted++
 	}
 
-	slog.Info("Posted initial disasters", "count", len(resp.Disasters))
+	slog.Info("Posted initial disasters", "count", posted)
 	return nil
+}
+
+func (b *Bot) acknowledgeDisaster(ctx context.Context, id string) {
+	_, err := b.client.AcknowledgeDisasters(ctx, &disastersv1.AcknowledgeDisastersRequest{
+		Ids: []string{id},
+	})
+	if err != nil {
+		slog.Error("Failed to acknowledge disaster", "id", id, "error", err)
+	}
 }
 
 func (b *Bot) postDisaster(d *disastersv1.Disaster) error {
