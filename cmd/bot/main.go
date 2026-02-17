@@ -13,6 +13,16 @@ import (
 )
 
 func main() {
+	// Configure slog to use local time
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				a.Value = slog.StringValue(a.Value.Time().Local().Format("2006-01-02T15:04:05.000-07:00"))
+			}
+			return a
+		},
+	})))
+
 	_ = godotenv.Load() // ignore error if .env doesn't exist
 
 	cfg, err := config.Load()
