@@ -45,7 +45,10 @@ func New(cfg *config.Config) (*Bot, error) {
 	}, nil
 }
 
-const maxRetries = 5
+const (
+	maxRetries             = 5
+	minPopulationThreshold = 500000 // Alert if 500k+ people affected, even if green
+)
 
 func (b *Bot) Start(ctx context.Context) error {
 	if err := b.session.Open(); err != nil {
@@ -129,7 +132,11 @@ func (b *Bot) shouldPost(d *disastersv1.Disaster) bool {
 	if d.Type == disastersv1.DisasterType_EARTHQUAKE {
 		return d.Magnitude >= b.config.MinMagnitude
 	}
-	return d.AlertLevel >= b.config.AlertLevel
+	// Alert for orange/red OR high population impact
+	if d.AlertLevel >= b.config.AlertLevel {
+		return true
+	}
+	return d.AffectedPopulationCount >= minPopulationThreshold
 }
 
 func (b *Bot) Stop() {
@@ -142,21 +149,27 @@ func (b *Bot) Stop() {
 }
 
 func (b *Bot) fetchInitialDisasters(ctx context.Context) error {
-	alertLevel := b.config.AlertLevel
 	discordSent := false
+	since := time.Now().Add(-24 * time.Hour).Unix()
+
+	// Fetch unsent disasters from last 24h
 	resp, err := b.client.ListDisasters(ctx, &disastersv1.ListDisastersRequest{
-		Limit:         50,
-		MinAlertLevel: &alertLevel,
-		DiscordSent:   &discordSent,
+		Limit:       50,
+		Since:       &since,
+		DiscordSent: &discordSent,
 	})
 	if err != nil {
 		return fmt.Errorf("listing disasters: %w", err)
 	}
 
-	slog.Info("Fetched unsent disasters", "count", len(resp.Disasters), "min_alert", alertLevel.String())
+	slog.Info("Fetched unsent disasters from last 24h", "count", len(resp.Disasters))
 
 	posted := 0
 	for _, disaster := range resp.Disasters {
+		if !b.shouldPost(disaster) {
+			continue
+		}
+
 		if err := b.postDisaster(disaster); err != nil {
 			slog.Error("Failed to post initial disaster", "id", disaster.Id, "error", err)
 			continue
@@ -207,8 +220,8 @@ func formatDisasterMessage(d *disastersv1.Disaster) string {
 		fmt.Sprintf("**TITLE:** %s", d.Title),
 	}
 
-	if d.Population != "" {
-		lines = append(lines, fmt.Sprintf("**AFFECTED:** %s", d.Population))
+	if d.AffectedPopulation != "" {
+		lines = append(lines, fmt.Sprintf("**AFFECTED:** %s", d.AffectedPopulation))
 	}
 
 	lines = append(lines,

@@ -28,6 +28,10 @@ github.com/mr1hm/go-disaster-alerts v0.0.0-20260215040946-855baccd62c9 h1:wIdAdZ
 github.com/mr1hm/go-disaster-alerts v0.0.0-20260215040946-855baccd62c9/go.mod h1:439k5Ij0xUxyeg47Ul/Vnr2SwtmJK6L1xnLQziEFcl0=
 github.com/mr1hm/go-disaster-alerts v0.0.0-20260216021011-cb9041dac365 h1:4Nuyp9NT2WIVruRVrXb4HFoZiO1/mbpJnW6ZwfeIUvw=
 github.com/mr1hm/go-disaster-alerts v0.0.0-20260216021011-cb9041dac365/go.mod h1:HTNWsnkrRhzTLwurCg89ZYDjLgB8AhOkH9CYnMF/L5k=
+github.com/mr1hm/go-disaster-alerts v0.0.0-20260220195646-3ee580f37e42 h1:ajapbTQWacRgnAs1cNZltK3hqrcNV8zartsMnnTvnaM=
+github.com/mr1hm/go-disaster-alerts v0.0.0-20260220195646-3ee580f37e42/go.mod h1:HTNWsnkrRhzTLwurCg89ZYDjLgB8AhOkH9CYnMF/L5k=
+github.com/mr1hm/go-disaster-alerts v0.0.0-20260220200708-23c06d3caf37 h1:hCZDbkZuE06l2pSIN/DWLih9+/cvfllTONL3va7K9QI=
+github.com/mr1hm/go-disaster-alerts v0.0.0-20260220200708-23c06d3caf37/go.mod h1:HTNWsnkrRhzTLwurCg89ZYDjLgB8AhOkH9CYnMF/L5k=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=

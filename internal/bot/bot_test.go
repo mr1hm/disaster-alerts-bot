@@ -216,7 +216,7 @@ func TestFormatDisasterMessage(t *testing.T) {
 		Source:     "GDACS",
 		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
 		Country:    "Japan",
-		Population: "1.2 million in affected area",
+		AffectedPopulation: "1.2 million in affected area",
 		ReportUrl:  "https://example.com/report/123",
 	}
 
