@@ -9,7 +9,7 @@ A Discord bot that streams real-time disaster alerts from the [go-disaster-alert
 - Real-time streaming via gRPC (no polling)
 - Automatic reconnection on stream failures (max 5 retries)
 - Configurable thresholds (magnitude, alert level)
-- Population-based alerts (500k+ affected triggers alert even for GREEN)
+- Population-based filtering (500k+ affected required for earthquakes, triggers GREEN alerts for others)
 - Deduplication via API acknowledgement (persists across restarts)
 - Fetches unsent disasters on startup (last 24h)
 - Graceful shutdown on SIGINT/SIGTERM
@@ -56,13 +56,9 @@ A Discord bot that streams real-time disaster alerts from the [go-disaster-alert
 
 ### Filtering
 
-The bot filters disasters before posting:
-- **Earthquakes**: posted if `magnitude >= MIN_MAGNITUDE`
-- **Other disasters**: posted if `alert_level >= ALERT_LEVEL` OR `affected_population >= 500,000`
-
-The population threshold catches high-impact disasters even if they have a GREEN alert level.
-
-Alert levels: `GREEN` < `ORANGE` < `RED`
+The bot posts disasters that meet these criteria:
+- **Earthquakes**: magnitude >= 5.0 AND 500K+ affected population
+- **Other disasters**: Alert Level >= ORANGE OR 500K+ affected population
 
 ## Running
 

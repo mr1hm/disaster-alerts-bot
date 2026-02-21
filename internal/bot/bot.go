@@ -130,7 +130,8 @@ func (b *Bot) streamDisasters(ctx context.Context) (connected bool, err error) {
 
 func (b *Bot) shouldPost(d *disastersv1.Disaster) bool {
 	if d.Type == disastersv1.DisasterType_EARTHQUAKE {
-		return d.Magnitude >= b.config.MinMagnitude
+		// Require both magnitude AND population impact
+		return d.Magnitude >= b.config.MinMagnitude && d.AffectedPopulationCount >= minPopulationThreshold
 	}
 	// Alert for orange/red OR high population impact
 	if d.AlertLevel >= b.config.AlertLevel {

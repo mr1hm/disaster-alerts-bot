@@ -69,15 +69,16 @@ func TestBot_PostDisaster(t *testing.T) {
 	}
 
 	disaster := &disastersv1.Disaster{
-		Id:         "test-123",
-		Title:      "M 6.5 - Near Tokyo, Japan",
-		Type:       disastersv1.DisasterType_EARTHQUAKE,
-		Magnitude:  6.5,
-		Latitude:   35.6762,
-		Longitude:  139.6503,
-		AlertLevel: disastersv1.AlertLevel_ORANGE,
-		Source:     "GDACS",
-		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
+		Id:                      "test-123",
+		Title:                   "M 6.5 - Near Tokyo, Japan",
+		Type:                    disastersv1.DisasterType_EARTHQUAKE,
+		Magnitude:               6.5,
+		Latitude:                35.6762,
+		Longitude:               139.6503,
+		AlertLevel:              disastersv1.AlertLevel_ORANGE,
+		AffectedPopulationCount: 1200000,
+		Source:                  "GDACS",
+		Timestamp:               time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
 	}
 
 	err := b.postDisaster(disaster)
@@ -206,18 +207,19 @@ func TestBot_PostedTracking_Concurrent(t *testing.T) {
 
 func TestFormatDisasterMessage(t *testing.T) {
 	disaster := &disastersv1.Disaster{
-		Id:         "test-123",
-		Title:      "M 6.5 - Near Tokyo, Japan",
-		Type:       disastersv1.DisasterType_EARTHQUAKE,
-		Magnitude:  6.5,
-		Latitude:   35.6762,
-		Longitude:  139.6503,
-		AlertLevel: disastersv1.AlertLevel_ORANGE,
-		Source:     "GDACS",
-		Timestamp:  time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
-		Country:    "Japan",
-		AffectedPopulation: "1.2 million in affected area",
-		ReportUrl:  "https://example.com/report/123",
+		Id:                      "test-123",
+		Title:                   "M 6.5 - Near Tokyo, Japan",
+		Type:                    disastersv1.DisasterType_EARTHQUAKE,
+		Magnitude:               6.5,
+		Latitude:                35.6762,
+		Longitude:               139.6503,
+		AlertLevel:              disastersv1.AlertLevel_ORANGE,
+		AffectedPopulationCount: 1200000,
+		Source:                  "GDACS",
+		Timestamp:               time.Date(2026, 1, 15, 14, 30, 0, 0, time.UTC).Unix(),
+		Country:                 "Japan",
+		AffectedPopulation:      "1.2 million in affected area",
+		ReportUrl:               "https://example.com/report/123",
 	}
 
 	msg := formatDisasterMessage(disaster)
@@ -258,28 +260,49 @@ func TestBot_ShouldPost(t *testing.T) {
 		want     bool
 	}{
 		{
-			name: "earthquake above threshold",
+			name: "earthquake above threshold with high population",
 			disaster: &disastersv1.Disaster{
-				Type:      disastersv1.DisasterType_EARTHQUAKE,
-				Magnitude: 6.0,
+				Type:                    disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude:               6.0,
+				AffectedPopulationCount: 600000,
 			},
 			want: true,
 		},
 		{
-			name: "earthquake below threshold",
+			name: "earthquake below magnitude threshold",
 			disaster: &disastersv1.Disaster{
-				Type:      disastersv1.DisasterType_EARTHQUAKE,
-				Magnitude: 4.5,
+				Type:                    disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude:               4.5,
+				AffectedPopulationCount: 600000,
 			},
 			want: false,
 		},
 		{
-			name: "earthquake at threshold",
+			name: "earthquake at threshold with high population",
 			disaster: &disastersv1.Disaster{
-				Type:      disastersv1.DisasterType_EARTHQUAKE,
-				Magnitude: 5.0,
+				Type:                    disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude:               5.0,
+				AffectedPopulationCount: 500000,
 			},
 			want: true,
+		},
+		{
+			name: "earthquake high magnitude but low population",
+			disaster: &disastersv1.Disaster{
+				Type:                    disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude:               7.0,
+				AffectedPopulationCount: 100000,
+			},
+			want: false,
+		},
+		{
+			name: "earthquake high population but low magnitude",
+			disaster: &disastersv1.Disaster{
+				Type:                    disastersv1.DisasterType_EARTHQUAKE,
+				Magnitude:               3.0,
+				AffectedPopulationCount: 1000000,
+			},
+			want: false,
 		},
 		{
 			name: "flood with orange alert",
